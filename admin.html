@@ -34,6 +34,7 @@
 
   .login-box input:focus { border-color: #1d9bf0; }
   .login-box .error { font-size: 12px; color: #f04040; margin-bottom: 12px; display: none; }
+  .login-box .hint { font-size: 11px; color: #333; margin-bottom: 16px; }
 
   .btn {
     padding: 10px 20px; border: none; border-radius: 6px;
@@ -178,7 +179,9 @@
     <h1>🦈 GBS Admin</h1>
     <p>Great Blue Shark — Quản lý chương</p>
     <input type="password" id="passwordInput" placeholder="Mật khẩu" autofocus>
-    <div class="error" id="loginError">Sai mật khẩu.</div>
+    <input type="password" id="tokenInput" placeholder="GitHub Token (ghp_...)">
+    <div class="hint">Token lấy ở github.com/settings/tokens</div>
+    <div class="error" id="loginError">Sai mật khẩu hoặc token.</div>
     <button class="btn btn-primary" onclick="login()">Đăng nhập</button>
   </div>
 </div>
@@ -247,32 +250,61 @@
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
 
-  const GH_TOKEN = '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';
   const GH_OWNER = 'ditmeplaystore';
   const GH_REPO = 'great-blue-shark';
   const GH_BRANCH = 'main';
   const ADMIN_PASS = 'makocain';
 
+  let GH_TOKEN = '';
   let chapters = [];
   let editingId = null;
   let pendingImages = [];
 
   // ── AUTH ──
-  window.login = function() {
-    if (document.getElementById('passwordInput').value === ADMIN_PASS) {
-      sessionStorage.setItem('gbs_admin', '1');
-      showAdmin();
-    } else {
+  window.login = async function() {
+    const pw = document.getElementById('passwordInput').value;
+    const token = document.getElementById('tokenInput').value.trim();
+
+    if (pw !== ADMIN_PASS || !token.startsWith('ghp_')) {
       document.getElementById('loginError').style.display = 'block';
-      document.getElementById('passwordInput').style.borderColor = '#f04040';
+      return;
     }
+
+    // Verify token
+    try {
+      const res = await fetch('https://api.github.com/user', {
+        headers: { 'Authorization': `token ${token}` }
+      });
+      if (!res.ok) {
+        document.getElementById('loginError').textContent = 'Token không hợp lệ.';
+        document.getElementById('loginError').style.display = 'block';
+        return;
+      }
+    } catch(e) {
+      document.getElementById('loginError').textContent = 'Không kết nối được GitHub.';
+      document.getElementById('loginError').style.display = 'block';
+      return;
+    }
+
+    GH_TOKEN = token;
+    sessionStorage.setItem('gbs_admin', '1');
+    sessionStorage.setItem('gbs_token', token);
+    showAdmin();
   };
 
   document.getElementById('passwordInput').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') document.getElementById('tokenInput').focus();
+  });
+
+  document.getElementById('tokenInput').addEventListener('keydown', (e) => {
     if (e.key === 'Enter') window.login();
   });
 
-  window.logout = function() { sessionStorage.removeItem('gbs_admin'); location.reload(); };
+  window.logout = function() {
+    sessionStorage.removeItem('gbs_admin');
+    sessionStorage.removeItem('gbs_token');
+    location.reload();
+  };
 
   function showAdmin() {
     document.getElementById('loginScreen').style.display = 'none';
@@ -289,7 +321,7 @@
       snapshot.forEach((d) => { chapters.push({ id: d.id, ...d.data() }); });
       renderChapterList();
     } catch(e) {
-      document.getElementById('chapterListAdmin').innerHTML = '<div class="empty-state"><p>Lỗi tải dữ liệu. Kiểm tra Firestore rules.</p></div>';
+      document.getElementById('chapterListAdmin').innerHTML = '<div class="empty-state"><p>Lỗi tải dữ liệu.</p></div>';
     }
   }
 
@@ -481,7 +513,7 @@
   // ── DELETE ──
   window.confirmDelete = function(id, title) {
     document.getElementById('confirmTitle').textContent = 'Xóa chương?';
-    document.getElementById('confirmMsg').textContent = 'Xóa "' + title + '"? Ảnh trên GitHub sẽ vẫn còn.';
+    document.getElementById('confirmMsg').textContent = 'Xóa "' + title + '"? Ảnh trên GitHub vẫn còn.';
     document.getElementById('confirmBtn').onclick = () => deleteChapter(id);
     document.getElementById('confirmOverlay').classList.add('active');
   };
@@ -512,7 +544,12 @@
     setTimeout(() => { t.style.display = 'none'; }, 3000);
   }
 
-  if (sessionStorage.getItem('gbs_admin') === '1') showAdmin();
+  // ── INIT ──
+  const savedToken = sessionStorage.getItem('gbs_token');
+  if (sessionStorage.getItem('gbs_admin') === '1' && savedToken) {
+    GH_TOKEN = savedToken;
+    showAdmin();
+  }
 </script>
 </body>
 </html>
