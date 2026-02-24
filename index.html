@@ -424,15 +424,19 @@
       // 🦈 EASTER EGG
       let clickCount = 0;
       let clickTimer = null;
-      banner.addEventListener('click', function() {
+      banner.addEventListener('click', easterEggClick);
+      banner.addEventListener('touchend', easterEggClick);
+
+      function easterEggClick(e) {
+        e.preventDefault();
         clickCount++;
         clearTimeout(clickTimer);
-        clickTimer = setTimeout(() => { clickCount = 0; }, 2000);
+        clickTimer = setTimeout(() => { clickCount = 0; }, 3000);
         if (clickCount >= 10) {
           clickCount = 0;
           sharkRain();
         }
-      });
+      }
 
       function sharkRain() {
         for (let i = 0; i < 30; i++) {
