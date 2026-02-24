@@ -68,6 +68,12 @@
     100% { transform: translateY(-300px) scale(0.3); opacity: 0; }
   }
 
+  @keyframes sharkFall {
+    0% { top: -60px; opacity: 1; }
+    90% { opacity: 1; }
+    100% { top: 110vh; opacity: 0; }
+  }
+
   .hero-title {
     position: absolute;
     bottom: 16px;
@@ -414,6 +420,33 @@
         setTimeout(() => b.remove(), 8000);
       }
       setInterval(spawnBubble, 600);
+
+      // 🦈 EASTER EGG
+      let clickCount = 0;
+      let clickTimer = null;
+      banner.addEventListener('click', function() {
+        clickCount++;
+        clearTimeout(clickTimer);
+        clickTimer = setTimeout(() => { clickCount = 0; }, 2000);
+        if (clickCount >= 10) {
+          clickCount = 0;
+          sharkRain();
+        }
+      });
+
+      function sharkRain() {
+        for (let i = 0; i < 30; i++) {
+          setTimeout(() => {
+            const shark = document.createElement('img');
+            shark.src = 'favicon.png';
+            shark.style.cssText = 'position:fixed;z-index:9999;pointer-events:none;width:' + (Math.random() * 40 + 20) + 'px;left:' + (Math.random() * 100) + 'vw;top:-60px;';
+            shark.style.animation = 'sharkFall ' + (Math.random() * 2 + 1.5) + 's linear forwards';
+            shark.style.transform = 'rotate(' + (Math.random() * 360) + 'deg)';
+            document.body.appendChild(shark);
+            setTimeout(() => shark.remove(), 4000);
+          }, i * 100);
+        }
+      }
     })();
   </script>
 
