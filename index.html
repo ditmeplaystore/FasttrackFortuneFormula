@@ -426,19 +426,28 @@
       // 🦈 EASTER EGG
       let clickCount = 0;
       let lastTap = 0;
-      function easterEggTap() {
+      let isTouchDevice = false;
+      
+      banner.addEventListener('touchstart', function() {
+        isTouchDevice = true;
+        handleTap();
+      }, {passive: true});
+      
+      banner.addEventListener('click', function() {
+        if (isTouchDevice) return;
+        handleTap();
+      });
+
+      function handleTap() {
         const now = Date.now();
         if (now - lastTap > 3000) clickCount = 0;
         lastTap = now;
         clickCount++;
-        document.title = 'Tap: ' + clickCount;
-        if (clickCount >= 3) {
+        if (clickCount >= 10) {
           clickCount = 0;
           sharkRain();
         }
       }
-      banner.addEventListener('touchstart', easterEggTap, {passive: true});
-      banner.addEventListener('click', easterEggTap);
 
       function sharkRain() {
         for (let i = 0; i < 30; i++) {
