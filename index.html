@@ -681,7 +681,7 @@
     storageBucket: "great-blue-shark.firebasestorage.app",
     messagingSenderId: "848130301351",
     appId: "1:848130301351:web:4c063bcd97a0f238e42a82",
-    measurementId: "G-TTVKGE6G8C"
+    // measurementId removed for privacy
   };
 
   const app = initializeApp(firebaseConfig);
@@ -754,12 +754,29 @@
   window.currentChapterForComments = 1;
   window.replyingTo = null; // { id, name }
 
+  window._lastCommentTime = 0;
   window.postComment = async function() {
-    const name = document.getElementById('commentName').value.trim();
-    const text = document.getElementById('commentText').value.trim();
+    // Rate limit: 30 giây giữa các comment
+    const now = Date.now();
+    if (now - window._lastCommentTime < 30000) {
+      alert('Đợi 30 giây giữa các bình luận.');
+      return;
+    }
+
+    let name = document.getElementById('commentName').value.trim();
+    let text = document.getElementById('commentText').value.trim();
     if (!name) { document.getElementById('commentName').style.borderColor = '#ff4060'; return; }
     document.getElementById('commentName').style.borderColor = '#122a4a';
     if (!text) return;
+
+    // Giới hạn độ dài
+    if (name.length > 30) name = name.slice(0, 30);
+    if (text.length > 1500) text = text.slice(0, 1500);
+
+    // Loại bỏ ký tự điều khiển
+    name = name.replace(/[\x00-\x1f]/g, '');
+    text = text.replace(/[\x00-\x1f]/g, '').replace(/\n{3,}/g, '\n\n');
+
     try {
       const commentData = {
         chapter: window.currentChapterForComments,
@@ -769,6 +786,7 @@
         timestamp: serverTimestamp()
       };
       await addDoc(collection(db, 'comments'), commentData);
+      window._lastCommentTime = Date.now();
       document.getElementById('commentText').value = '';
       cancelReply();
     } catch(e) {

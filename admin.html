@@ -178,10 +178,11 @@
   <div class="login-box">
     <h1>🦈 GBS Admin</h1>
     <p>Great Blue Shark — Quản lý chương</p>
-    <input type="password" id="passwordInput" placeholder="Mật khẩu" autofocus>
+    <input type="email" id="emailInput" placeholder="Email" autofocus>
+    <input type="password" id="passwordInput" placeholder="Mật khẩu">
     <input type="password" id="tokenInput" placeholder="GitHub Token (ghp_...)">
     <div class="hint">Token lấy ở github.com/settings/tokens</div>
-    <div class="error" id="loginError">Sai mật khẩu hoặc token.</div>
+    <div class="error" id="loginError">Sai email/mật khẩu hoặc token.</div>
     <button class="btn btn-primary" onclick="login()">Đăng nhập</button>
   </div>
 </div>
@@ -253,6 +254,7 @@
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js";
   import { getFirestore, collection, doc, getDocs, setDoc, deleteDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js";
+  import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-auth.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyC1mFu5jwgmszDa7bKCaj89BAECxW-6HEQ",
@@ -260,17 +262,16 @@
     projectId: "great-blue-shark",
     storageBucket: "great-blue-shark.firebasestorage.app",
     messagingSenderId: "848130301351",
-    appId: "1:848130301351:web:4c063bcd97a0f238e42a82",
-    measurementId: "G-TTVKGE6G8C"
+    appId: "1:848130301351:web:4c063bcd97a0f238e42a82"
   };
 
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
+  const auth = getAuth(app);
 
   const GH_OWNER = 'ditmeplaystore';
   const GH_REPO = 'great-blue-shark';
   const GH_BRANCH = 'main';
-  const ADMIN_PASS = 'makocain';
 
   let GH_TOKEN = '';
   let chapters = [];
@@ -280,35 +281,57 @@
 
   // ── AUTH ──
   window.login = async function() {
+    const email = document.getElementById('emailInput').value.trim();
     const pw = document.getElementById('passwordInput').value;
     const token = document.getElementById('tokenInput').value.trim();
 
-    if (pw !== ADMIN_PASS || !token.startsWith('ghp_')) {
+    if (!email || !pw) {
+      document.getElementById('loginError').textContent = 'Nhập email và mật khẩu.';
       document.getElementById('loginError').style.display = 'block';
       return;
     }
 
-    // Verify token
+    if (!token.startsWith('ghp_')) {
+      document.getElementById('loginError').textContent = 'Token GitHub không hợp lệ.';
+      document.getElementById('loginError').style.display = 'block';
+      return;
+    }
+
+    try {
+      // Đăng nhập Firebase
+      await signInWithEmailAndPassword(auth, email, pw);
+    } catch(e) {
+      document.getElementById('loginError').textContent = 'Sai email hoặc mật khẩu.';
+      document.getElementById('loginError').style.display = 'block';
+      return;
+    }
+
+    // Verify GitHub token
     try {
       const res = await fetch('https://api.github.com/user', {
         headers: { 'Authorization': `token ${token}` }
       });
       if (!res.ok) {
-        document.getElementById('loginError').textContent = 'Token không hợp lệ.';
+        document.getElementById('loginError').textContent = 'Token GitHub không hợp lệ.';
         document.getElementById('loginError').style.display = 'block';
+        await signOut(auth);
         return;
       }
     } catch(e) {
       document.getElementById('loginError').textContent = 'Không kết nối được GitHub.';
       document.getElementById('loginError').style.display = 'block';
+      await signOut(auth);
       return;
     }
 
     GH_TOKEN = token;
-    sessionStorage.setItem('gbs_admin', '1');
     sessionStorage.setItem('gbs_token', token);
     showAdmin();
   };
+
+  document.getElementById('emailInput').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') document.getElementById('passwordInput').focus();
+  });
 
   document.getElementById('passwordInput').addEventListener('keydown', (e) => {
     if (e.key === 'Enter') document.getElementById('tokenInput').focus();
@@ -318,8 +341,8 @@
     if (e.key === 'Enter') window.login();
   });
 
-  window.logout = function() {
-    sessionStorage.removeItem('gbs_admin');
+  window.logout = async function() {
+    await signOut(auth);
     sessionStorage.removeItem('gbs_token');
     location.reload();
   };
@@ -600,12 +623,16 @@
     setTimeout(() => { t.style.display = 'none'; }, 3000);
   }
 
-  // ── INIT ──
-  const savedToken = sessionStorage.getItem('gbs_token');
-  if (sessionStorage.getItem('gbs_admin') === '1' && savedToken) {
-    GH_TOKEN = savedToken;
-    showAdmin();
-  }
+  // ── INIT: Auto-login nếu đã đăng nhập Firebase ──
+  onAuthStateChanged(auth, (user) => {
+    if (user) {
+      const savedToken = sessionStorage.getItem('gbs_token');
+      if (savedToken) {
+        GH_TOKEN = savedToken;
+        showAdmin();
+      }
+    }
+  });
 </script>
 </body>
 </html>
