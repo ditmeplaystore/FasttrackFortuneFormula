@@ -908,7 +908,7 @@
         chapters.push({
           id: idx,
           firestoreId: d.id,
-          title: data.title || ('GBS#' + String(idx).padStart(3, '0')),
+          title: data.title || ('#' + idx),
           thumbnail: data.thumbnail || null,
           description: data.description || null,
           images: data.images || []
@@ -967,7 +967,7 @@
         </div>
         <div class="chap-info">
           <div class="chap-title">
-            GBS#${String(ch.id).padStart(3,'0')}
+            #${ch.id}${ch.title && ch.title !== ('#' + ch.id) ? ' - ' + ch.title.replace(/</g,'&lt;').replace(/>/g,'&gt;') : ''}
           </div>
           ${ch.description ? `<div class="chap-desc">${ch.description.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>` : ''}
           <div class="chap-meta">
@@ -1108,8 +1108,9 @@
     markAsRead(id);
     document.getElementById('mainView').classList.add('hidden');
     document.getElementById('readerView').classList.add('active');
-    document.getElementById('readerTitle').textContent = `GBS#${String(id).padStart(3,'0')}`;
     const ch = chapters.find(c => c.id === id);
+    const titleText = ch && ch.title && ch.title !== ('#' + id) ? '#' + id + ' - ' + ch.title : '#' + id;
+    document.getElementById('readerTitle').textContent = titleText;
     const content = document.getElementById('readerContent');
     if (ch && ch.images && ch.images.length > 0) {
       content.innerHTML = ch.images.map((img, i) => `<div class="img-wrapper" id="imgWrap${i}"><img src="${img}" alt="" loading="lazy" onload="imgLoaded(${i})" onerror="imgError(${i})"></div>`).join('');
@@ -1180,7 +1181,7 @@
       const lastRead = Math.max(...readIds);
       const nextCh = lastRead < chapters.length ? lastRead + 1 : lastRead;
       const isNext = lastRead < chapters.length;
-      const label = isNext ? 'Đọc tiếp GBS#' + String(nextCh).padStart(3, '0') : 'Đọc lại GBS#' + String(nextCh).padStart(3, '0');
+      const label = isNext ? 'Đọc tiếp #' + nextCh : 'Đọc lại #' + nextCh;
       container.style.display = 'block';
       container.innerHTML = '<button onclick="openReader(' + nextCh + ')" style="width:100%;padding:12px;background:#00a8ff;border:none;border-radius:4px;color:#fff;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;">▶ ' + label + '</button>';
     }
