@@ -21,7 +21,7 @@
     background: #060d18;
     color: #c8dce8;
     min-height: 100vh;
-    max-width: 940px;
+    max-width: 1080px;
     margin: 0 auto;
   }
 
@@ -29,7 +29,7 @@
   .hero-banner {
     position: relative;
     width: 100%;
-    height: 300px;
+    height: 150px;
     overflow: hidden;
   }
 
@@ -61,11 +61,31 @@
 
   .hero-title {
     position: absolute;
-    bottom: 16px;
-    left: 20px;
-    right: 20px;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
     z-index: 2;
     pointer-events: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .hero-title svg {
+    width: 100%;
+    max-width: 900px;
+    height: 100%;
+    overflow: visible;
+  }
+
+  .hero-title text {
+    font-family: 'Lilita One', sans-serif;
+    font-size: 44px;
+    font-weight: 400;
+    letter-spacing: 2px;
+    fill: #c8dce8;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.8);
   }
 
   .series-info {
@@ -555,7 +575,14 @@
   <div class="hero-banner" id="heroBanner">
     <img src="2d2d4163153d10c444cea8b4ddb6ae99.jpg" alt="Fast-track Fortune Formula">
     <div class="hero-title">
-      <h1 style="font-family:'Lilita One',sans-serif;font-size:32px;font-weight:400;letter-spacing:2px;margin:0;">FAST-TRACK FORTUNE FORMULA</h1>
+      <svg viewBox="0 0 900 150" preserveAspectRatio="xMidYMid meet">
+        <defs>
+          <path id="titleArc" d="M 80,140 Q 450,20 820,140" fill="none"/>
+        </defs>
+        <text text-anchor="middle">
+          <textPath href="#titleArc" startOffset="50%">FAST-TRACK FORTUNE FORMULA</textPath>
+        </text>
+      </svg>
     </div>
   </div>
 
