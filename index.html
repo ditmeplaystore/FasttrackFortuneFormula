@@ -1523,12 +1523,10 @@
       const bottomPx = rand(4, 50);
       mascot.style.bottom = bottomPx + 'px';
 
-      // Flip ảnh theo hướng: ltr (đi sang phải) thì lật ngang
-      if (mascotImg) {
-        mascotImg.style.transform = direction === 'ltr'
-          ? 'translate3d(0,0,0) scaleX(-1)'
-          : 'translate3d(0,0,0)';
-      }
+      // Flip mặt: gắn scaleX lên chính wrapper (cùng chỗ với translateX) để
+      // KHÔNG đụng vào transform của <img> (img đang chạy mascotBob).
+      // ltr (đi sang phải) thì lật ngang vì ảnh gốc quay mặt trái.
+      const flip = direction === 'ltr' ? ' scaleX(-1)' : '';
 
       // Vị trí start/end (translateX)
       const startX = direction === 'ltr' ? -mw - 20 : bw + 20;
@@ -1538,7 +1536,7 @@
       function frame(now) {
         const t = Math.min(1, (now - t0) / duration);
         const x = startX + (endX - startX) * t;
-        mascot.style.transform = 'translate3d(' + x + 'px, 0, 0)';
+        mascot.style.transform = 'translate3d(' + x + 'px, 0, 0)' + flip;
         if (t < 1) {
           requestAnimationFrame(frame);
         } else {
