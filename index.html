@@ -334,22 +334,6 @@
     50% { text-shadow: 0 0 20px rgba(0,168,255,0.5), 0 0 60px rgba(0,168,255,0.25), 0 0 100px rgba(0,168,255,0.1); }
   }
 
-  /* ── SCROLL PROGRESS ── */
-  .scroll-progress {
-    position: fixed;
-    top: 0; left: 0;
-    width: 0%;
-    height: 3px;
-    background: linear-gradient(90deg, #00a8ff, #00d4ff);
-    box-shadow: 0 0 10px rgba(0,168,255,0.5);
-    z-index: 9999;
-    transition: width 0.1s;
-    display: none;
-  }
-
-  .scroll-progress.active {
-    display: block;
-  }
 
   /* ── CHAPTER HOVER GLOW ── */
   .chapter-item {
@@ -475,7 +459,6 @@
 </head>
 <body>
 
-<div class="scroll-progress" id="scrollProgress"></div>
 
 <!-- ══════ MAIN VIEW ══════ -->
 <div class="main-view" id="mainView">
@@ -1308,22 +1291,8 @@
   }
 
   function startBookmarkTracking() {
-    const progressEl = document.getElementById('scrollProgress');
     window.addEventListener('scroll', () => {
       const inReader = document.getElementById('readerView').classList.contains('active');
-      
-      // Scroll progress bar
-      if (inReader) {
-        progressEl.classList.add('active');
-        const readerContent = document.getElementById('readerContent');
-        const rect = readerContent.getBoundingClientRect();
-        const total = readerContent.scrollHeight;
-        const scrolled = -rect.top + window.innerHeight;
-        const pct = Math.min(100, Math.max(0, (scrolled / total) * 100));
-        progressEl.style.width = pct + '%';
-      } else {
-        progressEl.classList.remove('active');
-      }
 
       // Bookmark
       if (!inReader) return;
@@ -1407,7 +1376,6 @@
 
   function closeReader() {
     saveBookmark();
-    document.getElementById('scrollProgress').classList.remove('active');
     document.getElementById('mainView').classList.remove('hidden');
     document.getElementById('readerView').classList.remove('active');
     renderChapters();
