@@ -892,37 +892,6 @@
     });
   }
 
-  function formatRelativeTime(seconds) {
-    if (!seconds) return '';
-    const now = Date.now() / 1000;
-    const diff = now - seconds;
-    
-    if (diff < 0) return 'vừa xong';
-    if (diff < 60) return 'vừa xong';
-    if (diff < 3600) {
-      const m = Math.floor(diff / 60);
-      return m + ' phút trước';
-    }
-    if (diff < 86400) {
-      const h = Math.floor(diff / 3600);
-      return h + ' giờ trước';
-    }
-    if (diff < 86400 * 7) {
-      const d = Math.floor(diff / 86400);
-      return d + ' ngày trước';
-    }
-    if (diff < 86400 * 30) {
-      const w = Math.floor(diff / (86400 * 7));
-      return w + ' tuần trước';
-    }
-    if (diff < 86400 * 365) {
-      const mo = Math.floor(diff / (86400 * 30));
-      return mo + ' tháng trước';
-    }
-    const y = Math.floor(diff / (86400 * 365));
-    return y + ' năm trước';
-  }
-
   window.escapeHtml = function(s) {
     return String(s)
       .replace(/&/g, '&amp;')
@@ -935,7 +904,6 @@
   function escapeHtml(s) { return window.escapeHtml(s); }
 
   function buildCommentEl(d, isReply) {
-    const time = d.timestamp ? formatRelativeTime(d.timestamp.seconds) : '';
     const safeText = escapeHtml(d.text);
     const displayName = escapeHtml(d.name);
     // rootId: nếu đây là reply, rootId = parentId của nó (cho replyTo gắn vào root)
